@@ -152,7 +152,7 @@ public class ServiceConfig
 	public string HealthCheckEndPoint { get; set; }
 }
 ```
-from the service's **appsettings.json** I will use the **Docker-compose.override.yml** file to set ports and inject the configuration to the services:
+from the service's **appsettings.json** I will use the **Docker-compose.override.yml** file to inject the configuration to the services:
 
 ```yml
 version: '3.9'
