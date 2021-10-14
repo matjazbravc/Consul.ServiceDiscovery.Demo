@@ -1,0 +1,31 @@
+{
+	"Routes": [
+		{
+			"Servicename": "ValueService",
+			"DownstreamPathTemplate": "/{url}",
+			"DownstreamScheme": "http",
+			"UpstreamPathTemplate": "/{url}",
+			"UpstreamHttpMethod": [ "GET" ],
+			"UseServiceDiscovery": true,
+			"RouteIsCaseSensitive": false,
+			"LoadBalancerOptions": {
+				"Type": "RoundRobin"
+			},
+			"QoSOptions": {
+				"ExceptionsAllowedBeforeBreaking": 3,
+				"DurationOfBreak": 5000,
+				"TimeoutValue": 2000
+			}
+		}
+	],
+	"GlobalConfiguration": {
+		"RequestIdKey": "OcRequestId",
+		"UseServiceDiscovery": true,
+		"ServiceDiscoveryProvider": {
+			"Host": "consul",
+			"Port": 8500,
+			"Type": "PollConsul",
+			"PollingInterval": 100
+		}
+	}
+}
