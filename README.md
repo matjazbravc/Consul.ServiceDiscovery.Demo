@@ -139,8 +139,9 @@ networks:
     common_network:
         driver: bridge
 ```
+**IMPORTANT!**
 
-Instead of configure **ServiceConfig**
+Instead of configure **ServiceConfig** from the service's **appsettings.json** configuration file
 ```csharp
 public class ServiceConfig
 {
@@ -152,7 +153,7 @@ public class ServiceConfig
 	public string HealthCheckEndPoint { get; set; }
 }
 ```
-from the service's **appsettings.json** I will use the **Docker-compose.override.yml** file to inject the configuration to the services:
+I will use the **Docker-compose.override.yml** file to inject the configuration to the services:
 
 ```yml
 version: '3.9'
@@ -243,7 +244,7 @@ And again, we make another request and we got response from **ValueService.OpenA
 ![](res/Gateway3.jpg)
 
 ## Conclusion
-Consul has first-class support for service discovery, health-check, key-value storage, multi-data centers. [Ocelot](https://github.com/ThreeMammals/Ocelot) successfuly comunicates with [Consul](https://www.consul.io/) service registry and retrives service registrations, load balancer loops through available services and sends requests.
+Consul has first-class support for service discovery, health-check, key-value storage and multi-data centers. [Ocelot](https://github.com/ThreeMammals/Ocelot) successfuly comunicates with [Consul](https://www.consul.io/) service registry and retrives service registrations, load balancer loops through available services and sends requests.
 
 Enjoy!
 
