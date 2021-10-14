@@ -1,0 +1,37 @@
+{
+	"Routes": [
+		{
+			"Servicename": "ValueService",
+			"DownstreamPathTemplate": "/{url}",
+			"DownstreamScheme": "http",
+			"UpstreamPathTemplate": "/{url}",
+			"UpstreamHttpMethod": [ "POST", "PUT", "GET", "DELETE" ],
+			"UseServiceDiscovery": true,
+			"RouteIsCaseSensitive": false,
+			"LoadBalancerOptions": {
+				"Type": "RoundRobin"
+			},
+			"QoSOptions": {
+				"ExceptionsAllowedBeforeBreaking": 3,
+				"DurationOfBreak": 5000,
+				"TimeoutValue": 2000
+			}
+		}
+	],
+	"GlobalConfiguration": {
+		"RequestIdKey": "OcRequestId",
+		"UseServiceDiscovery": true,
+		"ServiceDiscoveryProvider": {
+			"Host": "consul",
+			"Port": 8500,
+			"Type": "PollConsul",
+			"PollingInterval": 100
+		},
+		"RateLimitOptions": {
+			"DisableRateLimitHeaders": false,
+			"QuotaExceededMessage": "Too many requests, please wait...",
+			"HttpStatusCode": 999,
+			"ClientIdHeader": "TestClient"
+		}
+	}
+}
