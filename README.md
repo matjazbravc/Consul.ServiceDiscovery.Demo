@@ -153,7 +153,7 @@ public class ServiceConfig
 	public string HealthCheckEndPoint { get; set; }
 }
 ```
-I will use the **Docker-compose.override.yml** file to inject the configuration to the services:
+I used the **Docker-compose.override.yml** file to inject the configuration to the services:
 
 ```yml
 version: '3.9'
