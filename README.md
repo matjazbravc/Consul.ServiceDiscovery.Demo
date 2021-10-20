@@ -1,5 +1,5 @@
 ![](res/Title.jpg)
-# Building API Gateway with load balancer and service discovery (Part 2)
+# Building API Gateway with load balancer and service discovery
 In my [previous demo](https://github.com/matjazbravc/Ocelot.Gateway.Eureka.ServiceDiscovery.Demo) I showed how to implement [Ocelot](https://github.com/ThreeMammals/Ocelot) as service gateway and load balancer together with [Eureka](https://spring.io/projects/spring-cloud-netflix) for a service discovery. Instead Eureka this demo uses [Consul](https://www.consul.io/) for a service discovery.
 
 ## What is Consul?
