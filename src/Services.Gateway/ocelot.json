@@ -9,7 +9,7 @@
 			"UseServiceDiscovery": true,
 			"RouteIsCaseSensitive": false,
 			"LoadBalancerOptions": {
-				"Type": "RoundRobin"
+				"Type": "RoundRobin" // Loops through available services and sends requests
 			},
 			"QoSOptions": {
 				"ExceptionsAllowedBeforeBreaking": 3,

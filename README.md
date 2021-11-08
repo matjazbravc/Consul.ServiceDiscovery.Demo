@@ -21,6 +21,25 @@ Consul is designed to be friendly to both the DevOps community and application d
 
 Source: [Consul introduction](https://www.consul.io/docs/intro)
 
+## Service self-registration
+Before getting into implementation details how to implement self-registration to Consul, let’s look into how service discovery with self-registration really works.
+
+In a first step a service instance registers itself to the service discovery service by providing its name and address. After this gateway is able to get address of this service by querying the Consul service discovery by its name.
+
+![](res/ServiceRegistration.jpg)
+
+## Architecture
+![](res/Architecture.jpg)
+
+#### Services:
+* **Services.Gateway**: Gateway to all APIs
+* **ValueService.OpenApi-9100**: OpenAPI REST ValueService instance, port 9100
+* **ValueService.OpenApi-9200**: OpenAPI REST ValueService instance, port 9200
+* **ValueService.OpenApi-9300**: OpenAPI REST ValueService instance, port 9300
+
+First, each service instance registers itself to the service discovery service by providing its name and address.
+After this step client is able to get information about this service by querying the service discovery.
+
 ## Gateway configuration
 The following configuration shows how to set up multiple downstream services for a **Routes** using **ocelot.json** and use the **RoundRobin** load balancer and **Consul** service discovery.
 ```json
@@ -62,18 +81,6 @@ The following configuration shows how to set up multiple downstream services for
 	}
 }
 ```
-
-## Architecture
-![](res/Architecture.jpg)
-
-#### Services:
-* **Services.Gateway**: Gateway to all APIs
-* **ValueService.OpenApi-9100**: OpenAPI REST ValueService instance, port 9100
-* **ValueService.OpenApi-9200**: OpenAPI REST ValueService instance, port 9200
-* **ValueService.OpenApi-9300**: OpenAPI REST ValueService instance, port 9300
-
-First, each service instance registers itself to the service discovery service by providing its name and address.
-After this step client is able to get information about this service by querying the service discovery.
 
 # Running in Docker
 
