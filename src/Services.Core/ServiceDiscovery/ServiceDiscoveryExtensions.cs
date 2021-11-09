@@ -7,7 +7,7 @@ namespace Services.Core.ServiceDiscovery
 {
 	public static class ServiceDiscoveryExtensions
 	{
-		public static void RegisterConsulServices(this IServiceCollection services, ServiceConfig serviceConfig)
+		public static void AddConsul(this IServiceCollection services, ServiceConfig serviceConfig)
 		{
 			if (serviceConfig == null)
 			{
@@ -20,8 +20,8 @@ namespace Services.Core.ServiceDiscovery
 			});
 
 			services.AddSingleton(serviceConfig);
-			services.AddSingleton<IHostedService, ServiceDiscoveryHostedService>();
 			services.AddSingleton<IConsulClient, ConsulClient>(_ => consulClient);
+			services.AddSingleton<IHostedService, ServiceDiscoveryHostedService>();
 		}
 	}
 }

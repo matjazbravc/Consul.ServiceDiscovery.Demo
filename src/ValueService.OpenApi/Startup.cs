@@ -21,7 +21,7 @@ namespace ValueService.OpenApi
 
 		public void ConfigureServices(IServiceCollection services)
 		{
-			ConfigureConsul(services);
+			services.AddConsul(Configuration.GetServiceConfig());
 			services.AddHttpContextAccessor();
 			services.AddControllers();
 			services.AddCors();
@@ -49,12 +49,6 @@ namespace ValueService.OpenApi
 					await context.Response.WriteAsync(SERVICE_NAME);
 				});
 			});
-		}
-
-		private void ConfigureConsul(IServiceCollection services)
-		{
-			var serviceConfig = Configuration.GetServiceConfig();
-			services.RegisterConsulServices(serviceConfig);
 		}
 	}
 }

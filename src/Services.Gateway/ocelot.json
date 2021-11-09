@@ -9,7 +9,7 @@
 			"UseServiceDiscovery": true,
 			"RouteIsCaseSensitive": false,
 			"LoadBalancerOptions": {
-				"Type": "RoundRobin" // Loops through available services and sends requests
+				"Type": "RoundRobin"
 			},
 			"QoSOptions": {
 				"ExceptionsAllowedBeforeBreaking": 3,
@@ -26,12 +26,6 @@
 			"Port": 8500,
 			"Type": "PollConsul",
 			"PollingInterval": 100
-		},
-		"RateLimitOptions": {
-			"DisableRateLimitHeaders": false,
-			"QuotaExceededMessage": "Too many requests, please wait...",
-			"HttpStatusCode": 999,
-			"ClientIdHeader": "TestClient"
 		}
 	}
 }

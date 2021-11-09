@@ -18,6 +18,7 @@ namespace Services.Core.ServiceDiscovery
 			_config = config;
 		}
 
+		// Registers service to Consul registry
 		public async Task StartAsync(CancellationToken cancellationToken)
 		{
 			_registration = new AgentServiceRegistration
@@ -35,10 +36,14 @@ namespace Services.Core.ServiceDiscovery
 				}
 			};
 
+			// Deregister already registered service
 			await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
+
+			// Registers service
 			await _client.Agent.ServiceRegister(_registration, cancellationToken).ConfigureAwait(false);
 		}
 
+		// If the service is shutting down it deregisters service from Consul registry
 		public async Task StopAsync(CancellationToken cancellationToken)
 		{
 			await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
