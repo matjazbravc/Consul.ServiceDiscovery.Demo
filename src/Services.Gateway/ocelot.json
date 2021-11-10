@@ -5,7 +5,7 @@
 			"DownstreamPathTemplate": "/{url}",
 			"DownstreamScheme": "http",
 			"UpstreamPathTemplate": "/{url}",
-			"UpstreamHttpMethod": [ "POST", "PUT", "GET", "DELETE" ],
+			"UpstreamHttpMethod": [ "GET" ],
 			"UseServiceDiscovery": true,
 			"RouteIsCaseSensitive": false,
 			"LoadBalancerOptions": {
