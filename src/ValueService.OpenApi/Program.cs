@@ -1,3 +1,4 @@
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,7 @@ namespace ValueService.OpenApi
 
 		public static IHostBuilder CreateHostBuilder(string[] args) =>
 			Host.CreateDefaultBuilder(args)
+				.UseContentRoot(Directory.GetCurrentDirectory())
 				.ConfigureWebHostDefaults(webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
@@ -22,8 +24,8 @@ namespace ValueService.OpenApi
 				{
 					config
 						.SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
-						.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-						.AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true)
+						.AddJsonFile("appsettings.json", false, true)
+						.AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true)
 						.AddEnvironmentVariables();
 				})
 				.ConfigureLogging((builderContext, logging) =>
