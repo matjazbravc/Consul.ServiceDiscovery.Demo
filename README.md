@@ -26,6 +26,8 @@ Before getting into implementation details how to implement self-registration to
 
 In a first step a service instance registers itself to the service discovery service by providing its name and address. After this gateway is able to get address of this service by querying the Consul service discovery by its name.
 
+The **key thing to note** is that the service instances are registered with a **unique service ID** in order to disambiguate between instances of **ValueService** which are running on the same **Consul** service. **It is required that all services have a unique ID per node**, so if names might conflict (which is our case) then unique IDs must be provided.
+
 ![](res/ServiceRegistration.jpg)
 
 ## Architecture
