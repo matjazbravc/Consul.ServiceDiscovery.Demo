@@ -285,7 +285,7 @@ public class Startup
 
 As mention before, we will containerize all services with Docker, including Consul, using Lightweight GNU/Linux distributions for containers.
 
-Docker-compose.yml file with setup for all the containers looks like this:
+**Docker-compose.yml** file with setup for all the containers looks like this:
 ```yaml
 version: '3.9'
 
@@ -346,7 +346,7 @@ networks:
     common_network:
         driver: bridge
 ```
-Note that our services doesn’t contain any confuguration files, for that purpose we are going to use Docker-compose.override.yml file:
+Note that our services doesn’t contain any confuguration files, for that purpose we are going to use **Docker-compose.override.yml** file:
 ```yaml
 version: '3.9'
 
@@ -411,12 +411,11 @@ services:
 ```
 ## Setup the Containers
 
-To execute compose file, open Powershell, and navigate to the compose file in the root folder. Then execute the following command: docker-compose up -d --build which starts and runs all services. The -d parameter executes the command detached. This means that the containers run in the background and don’t block your Powershell window. To check all running containers use docker ps.
+To execute compose file, open Powershell, and navigate to the compose file in the root folder. Then execute the following command: **docker-compose up -d --build** which starts and runs all services. The **-d** parameter executes the command detached. This means that the containers run in the background and don’t block your Powershell window. To check all running containers use command **docker ps**.
 
 ![](res/Docker.jpg)
 
 ## Consul Web UI
-Consul Web UI
 
 The Consul offers a nice web user interface right out of the box. You can access it on port **8500** (**http://localhost:8500**). Let’s look at some of the screens.
 
