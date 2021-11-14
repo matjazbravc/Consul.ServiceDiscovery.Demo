@@ -57,7 +57,7 @@ In a first step a service instance registers itself to the service discovery ser
 
 ## Implementation
 
-Let’s look at how we can implement self-registration in the .NET application. First, we need to read the configuration required for service discovery from environment variables, that were passed through the docker-compose.override.yml file.
+Let’s look at how we can implement self-registration in the .NET application. First, we need to read the configuration required for service discovery from environment variables, that were passed through the **docker-compose.override.yml** file.
 
 ```csharp
 public static class ServiceConfigExtensions
@@ -83,7 +83,7 @@ public static class ServiceConfigExtensions
 	}
 }
 ```
-After reading the configuration required to reach service discovery service, we can use it to register our service. The code below is implemented as a background task (hosted service), that registers the service in Consul by overriding previous information about service if such existed. If the service is shutting down, it is automatically deregistered from the Consul registry.
+After reading the configuration required to reach service discovery service, we can use it to register our service. The code below is implemented as a **background task** (hosted service), that **registers** the service in **Consul** by overriding previous information about service if such existed. If the service is shutting down, it is **automatically unregistered** from the Consul registry.
 
 ```csharp
 public class ServiceDiscoveryHostedService : IHostedService
@@ -156,9 +156,9 @@ Once we have registered our services in the service discovery service, we can st
 
 ## Creating API Gateway using Ocelot
 
-Ocelot requires that you provide a configuration file that contains a list of Routes (configuration used to map upstream request) and a GlobalConfiguration (other configuration like QoS, Rate limiting, etc.).
-In the ocelot.json file below, you can see how we forward HTTP requests. We have to specify which type of load balancer we will use, in our case this is a “RoundRobin” which loops through available services and sends requests to available services.
-It is important to set the Consul as a service discovery service in GlobalConfiguration for ServiceDiscoveryProvider.
+**Ocelot** requires that you provide a configuration file that contains a list of **Routes** (configuration used to map upstream request) and a **GlobalConfiguration** (other configuration like QoS, Rate limiting, etc.).
+In the ocelot.json file below, you can see how we forward HTTP requests. We have to specify which type of load balancer we will use, in our case this is a **“RoundRobin”** which loops through available services and sends requests to available services.
+It is important to set the Consul as a service discovery service in **GlobalConfiguration** for **ServiceDiscoveryProvider**.
 ```json
 {
 	"Routes": [
@@ -192,7 +192,7 @@ It is important to set the Consul as a service discovery service in GlobalConfig
 	}
 }
 ```
-Here are some necessary explanations for ServiceDiscoveryProvider settings in the GlobalConfiguration section: 
+Here are some necessary explanations for **ServiceDiscoveryProvider** settings in the **GlobalConfiguration** section: 
  
 * Host - the host of Consul
 * Port - the port of Consul
@@ -201,7 +201,7 @@ Here are some necessary explanations for ServiceDiscoveryProvider settings in th
   * PollConsul, means that Ocelot will poll Consul for latest service information
 * PollingInterval - tells Ocelot how often to call Consul for changes in the service registry
 
-After we have defined our configuration we can start to implement API Gateway based on .NET 5 and Ocelot. Below we can see the implementation of Ocelot API Gateway service, that uses our ocelot.json configuration file and Consul as a service registry.
+After we have defined our configuration we can start to implement API Gateway based on **.NET 5** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
 
 ```csharp
 public class Program
@@ -283,9 +283,9 @@ public class Startup
 ```
 ## Running in Docker
 
-As mention before, we will containerize all services with Docker, including Consul, using Lightweight GNU/Linux distributions for containers.
+As mention before, we will containerize all services with Docker, including **Consul**, using **Lightweight GNU/Linux distributions** for containers.
 
-**Docker-compose.yml** file with setup for all the containers looks like this:
+**docker-compose.yml** file with setup for all the containers looks like this:
 ```yaml
 version: '3.9'
 
