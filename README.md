@@ -439,7 +439,7 @@ Let’s make several calls through API Gateway http://localhost:9500/api/values.
 ![](res/Gateway3.jpg)
 
 ## Conclusion
-Micro service systems are not easy to build and maintain. This tutorial showed how easy it is to develop and deploy an application with microservice architecture.
+Micro service systems are not easy to build and maintain. But this tutorial showed how easy it is to develop and deploy an application with microservice architecture.
 HashiCorp Consul has first-class support for service discovery, health-check, key-value storage and multi-data centers. Ocelot as a gateway successfuly comunicates with Consul service registry and retrives service registrations, load balancer loops through available services and sends requests.
 Using both makes life significantly easier for developers facing such challenges. Do you agree?
 
