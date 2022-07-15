@@ -44,7 +44,7 @@ namespace ValueService.OpenApi
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapControllers();
-				endpoints.MapGet("/", async context =>
+				endpoints.MapGet("", async context =>
 				{
 					await context.Response.WriteAsync(SERVICE_NAME);
 				});
