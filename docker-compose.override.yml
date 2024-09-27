@@ -1,58 +1,62 @@
-version: '3.9'
-
 services:
     consul:
         ports:
              - "8500:8500"
 
     valueservice1.openapi:
+        # Swagger UI: http://localhost:9100/index.html
+        # http://localhost:9100/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice1.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9100
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice1.openapi
-          - ServiceConfig__Port=80
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
+          - ServiceConfig__Port=8080
         ports:
-            - 9100:80
+            - 9100:8080
         depends_on:
             - consul
 
     valueservice2.openapi:
+        # Swagger UI: http://localhost:9200/index.html
+        # http://localhost:9200/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice2.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9200
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice2.openapi
-          - ServiceConfig__Port=80
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
+          - ServiceConfig__Port=8080
         ports:
-            - 9200:80
+            - 9200:8080
         depends_on:
             - consul
 
     valueservice3.openapi:
+        # Swagger UI: http://localhost:9300/index.html
+        # http://localhost:9300/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice3.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9300
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice3.openapi
-          - ServiceConfig__Port=80
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
+          - ServiceConfig__Port=8080
         ports:
-            - 9300:80
+            - 9300:8080
         depends_on:
             - consul
 
     services.gateway:
+        # Call first available service: http://localhost:9500/api/values
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-            - ASPNETCORE_URLS=http://+:80
         ports:
-            - 9500:80
+            - 9500:8080
         depends_on:
             - consul
             - valueservice1.openapi

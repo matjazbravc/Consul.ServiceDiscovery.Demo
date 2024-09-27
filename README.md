@@ -62,25 +62,22 @@ Let’s look at how we can implement self-registration in the .NET application. 
 ```csharp
 public static class ServiceConfigExtensions
 {
-	public static ServiceConfig GetServiceConfig(this IConfiguration configuration)
-	{
-		if (configuration == null)
-		{
-			throw new ArgumentNullException(nameof(configuration));
-		}
+  public static ServiceConfig GetServiceConfig(this IConfiguration configuration)
+  {
+    ArgumentNullException.ThrowIfNull(configuration);
 
-		var serviceConfig = new ServiceConfig
-		{
-			Id = configuration.GetValue<string>("ServiceConfig:Id"),
-			Name = configuration.GetValue<string>("ServiceConfig:Name"),
-			Address = configuration.GetValue<string>("ServiceConfig:Address"),
-			Port = configuration.GetValue<int>("ServiceConfig:Port"),
-			DiscoveryAddress = configuration.GetValue<Uri>("ServiceConfig:DiscoveryAddress"),
-			HealthCheckEndPoint = configuration.GetValue<string>("ServiceConfig:HealthCheckEndPoint"),
-		};
+    var serviceConfig = new ServiceConfig
+    {
+      Id = configuration.GetValue<string>("ServiceConfig:Id"),
+      Name = configuration.GetValue<string>("ServiceConfig:Name"),
+      ApiUrl = configuration.GetValue<string>("ServiceConfig:ApiUrl"),
+      Port = configuration.GetValue<int>("ServiceConfig:Port"),
+      ConsulUrl = configuration.GetValue<Uri>("ServiceConfig:ConsulUrl"),
+      HealthCheckEndPoint = configuration.GetValue<string>("ServiceConfig:HealthCheckEndPoint"),
+    };
 
-		return serviceConfig;
-	}
+    return serviceConfig;
+  }
 }
 ```
 After reading the configuration required to reach service discovery service, we can use it to register our service. The code below is implemented as a **background task** (hosted service), that **registers** the service in **Consul** by overriding previous information about service if such existed. If the service is shutting down, it is **automatically unregistered** from the Consul registry.
@@ -88,68 +85,63 @@ After reading the configuration required to reach service discovery service, we 
 ```csharp
 public class ServiceDiscoveryHostedService : IHostedService
 {
-	private readonly IConsulClient _client;
-	private readonly ServiceConfig _config;
-	private AgentServiceRegistration _registration;
+  private readonly IConsulClient _client;
+  private readonly ServiceConfig _config;
+  private AgentServiceRegistration _registration;
+  private readonly ILogger _logger;
 
-	public ServiceDiscoveryHostedService(IConsulClient client, ServiceConfig config)
-	{
-		_client = client;
-		_config = config;
-	}
+  public ServiceDiscoveryHostedService(IConsulClient client, ServiceConfig config)
+  {
+    _client = client;
+    _config = config;
 
-	// Registers service to Consul registry
-	public async Task StartAsync(CancellationToken cancellationToken)
-	{
-		_registration = new AgentServiceRegistration
-		{
-			ID = _config.Id,
-			Name = _config.Name,
-			Address = _config.Address,
-			Port = _config.Port,
-			Check = new AgentServiceCheck()
-			{
-				DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(5),
-				Interval = TimeSpan.FromSeconds(15),
-				HTTP = $"http://{_config.Address}:{_config.Port}/api/values/{_config.HealthCheckEndPoint}",
-				Timeout = TimeSpan.FromSeconds(5)
-			}
-		};
+    using ILoggerFactory loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
+      .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace));
 
-		// Deregister already registered service
-		await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
+    _logger = loggerFactory.CreateLogger<ServiceDiscoveryHostedService>();
+  }
 
-		// Registers service
-		await _client.Agent.ServiceRegister(_registration, cancellationToken).ConfigureAwait(false);
-	}
+  // Registers service to Consul registry
+  public async Task StartAsync(CancellationToken cancellationToken)
+  {
+    _registration = new AgentServiceRegistration
+    {
+      ID = _config.Id,
+      Name = _config.Name,
+      Address = _config.ApiUrl,
+      Port = _config.Port,
+      Check = new AgentServiceCheck()
+      {
+        DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(5),
+        Interval = TimeSpan.FromSeconds(15),
+        HTTP = $"http://{_config.ApiUrl}:{_config.Port}/api/values/{_config.HealthCheckEndPoint}",
+        Timeout = TimeSpan.FromSeconds(5)
+      }
+    };
 
-	// If the service is shutting down it deregisters service from Consul registry
-	public async Task StopAsync(CancellationToken cancellationToken)
-	{
-		await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
-	}
-}
-```
-Finally, we need to register our configuration and hosted service with Consul dependencies to dependency injection container. To do this, we use a simple extension method that can be shared within our services:
-```csharp
-public static class ServiceDiscoveryExtensions
-{
-	public static void AddConsul(this IServiceCollection services, ServiceConfig serviceConfig)
-	{
-		if (serviceConfig == null)
-		{
-			throw new ArgumentNullException(nameof(serviceConfig));
-		}
+    try
+    {
+      await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
+      await _client.Agent.ServiceRegister(_registration, cancellationToken).ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error while trying to deregister in StartAsync()");
+    }
+  }
 
-		var consulClient = new ConsulClient(config =>
-		{
-			config.Address = serviceConfig.DiscoveryAddress;
-		});
-
-		services.AddSingleton(serviceConfig);
-		services.AddSingleton<IConsulClient, ConsulClient>(_ => consulClient);
-		services.AddSingleton<IHostedService, ServiceDiscoveryHostedService>();
-	}
+  // If the service is shutting down it deregisters service from Consul registry
+  public async Task StopAsync(CancellationToken cancellationToken)
+  {
+    try
+    {
+      await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError(ex, "Error while trying to deregister in StopAsync()");
+    }
+  }
 }
 ```
 Once we have registered our services in the service discovery service, we can start implementing the Gateway API.
@@ -161,35 +153,35 @@ In the ocelot.json file below, you can see how we forward HTTP requests. We have
 It is important to set the Consul as a service discovery service in **GlobalConfiguration** for **ServiceDiscoveryProvider**.
 ```json
 {
-	"Routes": [
-		{
-			"Servicename": "ValueService",
-			"DownstreamPathTemplate": "/{url}",
-			"DownstreamScheme": "http",
-			"UpstreamPathTemplate": "/{url}",
-			"UpstreamHttpMethod": [ "GET" ],
-			"UseServiceDiscovery": true,
-			"RouteIsCaseSensitive": false,
-			"LoadBalancerOptions": {
-				"Type": "RoundRobin"
-			},
-			"QoSOptions": {
-				"ExceptionsAllowedBeforeBreaking": 3,
-				"DurationOfBreak": 5000,
-				"TimeoutValue": 2000
-			}
-		}
-	],
-	"GlobalConfiguration": {
-		"RequestIdKey": "OcRequestId",
-		"UseServiceDiscovery": true,
-		"ServiceDiscoveryProvider": {
-			"Host": "consul",
-			"Port": 8500,
-			"Type": "PollConsul",
-			"PollingInterval": 100
-		}
-	}
+  "Routes": [
+    {
+      "Servicename": "ValueService",
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "UpstreamPathTemplate": "/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "UseServiceDiscovery": true,
+      "RouteIsCaseSensitive": false,
+      "LoadBalancerOptions": {
+        "Type": "RoundRobin"
+      },
+      "QoSOptions": {
+        "ExceptionsAllowedBeforeBreaking": 3,
+        "DurationOfBreak": 5000,
+        "TimeoutValue": 2000
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "RequestIdKey": "OcelotRequestId",
+    "UseServiceDiscovery": true,
+    "ServiceDiscoveryProvider": {
+      "Host": "consul",
+      "Port": 8500,
+      "Type": "PollConsul",
+      "PollingInterval": 100
+    }
+  }
 }
 ```
 Here are some necessary explanations for **ServiceDiscoveryProvider** settings in the **GlobalConfiguration** section: 
@@ -201,84 +193,107 @@ Here are some necessary explanations for **ServiceDiscoveryProvider** settings i
   * PollConsul, means that Ocelot will poll Consul for latest service information
 * PollingInterval - tells Ocelot how often to call Consul for changes in the service registry
 
-After we have defined our configuration we can start to implement API Gateway based on **.NET 5** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
+After we have defined our configuration we can start to implement API Gateway based on **.NET 8** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
 
 ```csharp
-public class Program
-{
-	public static void Main(string[] args)
-	{
-		CreateHostBuilder(args).Build().Run();
-	}
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using ValueService.OpenApi;
 
-	public static IHostBuilder CreateHostBuilder(string[] args) =>
-		Host.CreateDefaultBuilder(args)
-			.UseContentRoot(Directory.GetCurrentDirectory())
-			.ConfigureWebHostDefaults(webBuilder =>
-			{
-				webBuilder.UseStartup<Startup>();
-			})
-			.ConfigureAppConfiguration((hostingContext, config) =>
-			{
-				config
-					.SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
-					.AddJsonFile("appsettings.json", false, true)
-					.AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
-					.AddJsonFile("ocelot.json", false, false)
-					.AddEnvironmentVariables();
-			})
-			.ConfigureLogging((builderContext, logging) =>
-			{
-				logging.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
-				logging.AddConsole();
-				logging.AddDebug();
-				logging.AddEventSourceLogger();
-			});
-}
+IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
+    .UseContentRoot(Directory.GetCurrentDirectory())
+    .ConfigureWebHostDefaults(webBuilder =>
+    {
+      webBuilder.UseStartup<Startup>();
+    })
+    .ConfigureAppConfiguration((hostingContext, config) =>
+    {
+      config
+        .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
+        .AddJsonFile("appsettings.json", false, true)
+        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true)
+        .AddEnvironmentVariables();
+    })
+    .ConfigureLogging((builderContext, logging) =>
+    {
+      logging.ClearProviders();
+      logging.AddConsole();
+      logging.AddDebug();
+    });
+
+IHost host = hostBuilder.Build();
+await host.RunAsync();
 ```
 ```csharp
-public class Startup
+public class Startup(IConfiguration configuration)
 {
-	private const string SERVICE_NAME = "ValueService.OpenApi";
+  public IConfiguration Configuration { get; } = configuration;
 
-	public Startup(IConfiguration configuration)
-	{
-		Configuration = configuration;
-	}
+  public void ConfigureServices(IServiceCollection services)
+  {
+    services.AddConsul(Configuration.GetServiceConfig());
+    services.AddHttpContextAccessor();
+    services.AddControllers();
+    services.AddCors();
+    services.AddRouting(options => options.LowercaseUrls = true);
+    services.AddEndpointsApiExplorer();
+    services.AddSwaggerGen(options =>
+    {
+      options.SwaggerDoc("v1", new OpenApiInfo
+      {
+        Version = "v1",
+        Title = "ValueService.OpenAPI",
+        Description = "An ASP.NET Core Web API for demonstrating Consul service discovery.",
+        TermsOfService = new Uri("https://example.com/terms"),
+        Contact = new OpenApiContact
+        {
+          Name = "Example Contact",
+          Url = new Uri("https://example.com/contact")
+        },
+        License = new OpenApiLicense
+        {
+          Name = "Example License",
+          Url = new Uri("https://example.com/license")
+        }
+      });
 
-	public IConfiguration Configuration { get; }
+      var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+      options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    });
+  }
 
-	public void ConfigureServices(IServiceCollection services)
-	{
-		services.AddConsul(Configuration.GetServiceConfig());
-		services.AddHttpContextAccessor();
-		services.AddControllers();
-		services.AddCors();
-		services.AddRouting(options => options.LowercaseUrls = true);
-	}
+  public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+  {
+    app.UseRouting();
+    if (env.IsDevelopment())
+    {
+      app.UseSwagger();
+      app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
+      {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.RoutePrefix = string.Empty;
+      });
+    }
+    else
+    {
+      app.UseHsts();
+    }
 
-	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-	{
-		app.UseRouting();
-		if (env.IsDevelopment())
-		{
-			app.UseDeveloperExceptionPage();
-		}
-		else
-		{
-			app.UseHsts();
-		}
-		app.UseRouting();
-		app.UseStaticFiles();
-		app.UseEndpoints(endpoints =>
-		{
-			endpoints.MapControllers();
-			endpoints.MapGet("/", async context =>
-			{
-				await context.Response.WriteAsync(SERVICE_NAME);
-			});
-		});
-	}
+    // Configure the HTTP request pipeline.
+    app.UseRouting();
+    app.UseStaticFiles();
+    app.UseEndpoints(endpoints =>
+    {
+      endpoints.MapControllers();
+      endpoints.MapGet("", async context =>
+      {
+        await context.Response.WriteAsync("ValueService.OpenApi");
+      });
+    });
+  }
 }
 ```
 ## Running in Docker
@@ -287,20 +302,19 @@ As mention before, we will containerize all services with Docker, including **Co
 
 **docker-compose.yml** file with setup for all the containers looks like this:
 ```yaml
-version: '3.9'
-
+services:
 services:
    consul:
-        image: consul:latest
+        image: hashicorp/consul
+        container_name: consul
         command: consul agent -dev -log-level=warn -ui -client=0.0.0.0
         hostname: consul
-        container_name: consul
         networks:
             - common_network
 
    valueservice1.openapi:
-        container_name: valueservice1.openapi
         image: valueservice.openapi:latest
+        container_name: valueservice1.openapi
         restart: on-failure
         hostname: valueservice1.openapi
         build:
@@ -310,8 +324,8 @@ services:
             - common_network
 
    valueservice2.openapi:
-        container_name: valueservice2.openapi
         image: valueservice.openapi:latest
+        container_name: valueservice2.openapi
         restart: on-failure
         hostname: valueservice2.openapi
         build:
@@ -321,8 +335,8 @@ services:
             - common_network
 
    valueservice3.openapi:
-        container_name: valueservice3.openapi
         image: valueservice.openapi:latest
+        container_name: valueservice3.openapi
         restart: on-failure
         hostname: valueservice3.openapi
         build:
@@ -332,8 +346,8 @@ services:
             - common_network
 
    services.gateway:
-        container_name: services.gateway
         image: services.gateway:latest
+        container_name: services.gateway
         restart: on-failure
         hostname: services.gateway
         build:
@@ -345,64 +359,69 @@ services:
 networks:
     common_network:
         driver: bridge
+
 ```
 Note that our services doesn’t contain any confuguration files, for that purpose we are going to use **Docker-compose.override.yml** file:
 ```yaml
-version: '3.9'
-
 services:
     consul:
         ports:
              - "8500:8500"
 
     valueservice1.openapi:
+        # Swagger UI: http://localhost:9100/index.html
+        # http://localhost:9100/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice1.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9100
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice1.openapi
-          - ServiceConfig__Port=80
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
+          - ServiceConfig__Port=8080
         ports:
-            - 9100:80
+            - 9100:8080
         depends_on:
             - consul
 
     valueservice2.openapi:
+        # Swagger UI: http://localhost:9200/index.html
+        # http://localhost:9200/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice2.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9200
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice2.openapi
-          - ServiceConfig__Port=80
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
+          - ServiceConfig__Port=8080
         ports:
-            - 9200:80
+            - 9200:8080
         depends_on:
             - consul
 
     valueservice3.openapi:
+        # Swagger UI: http://localhost:9300/index.html
+        # http://localhost:9300/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice3.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9300
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice3.openapi
-          - ServiceConfig__Port=80
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
+          - ServiceConfig__Port=8080
         ports:
-            - 9300:80
+            - 9300:8080
         depends_on:
             - consul
 
     services.gateway:
+        # Call first available service: http://localhost:9500/api/values
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-            - ASPNETCORE_URLS=http://+:80
         ports:
-            - 9500:80
+            - 9500:8080
         depends_on:
             - consul
             - valueservice1.openapi
@@ -446,15 +465,15 @@ Enjoy!
 
 ## Prerequisites
 - [Visual Studio](https://www.visualstudio.com/vs/community) 2022 17.2.6 or greater
-- [.NET SDK 6.0](https://dotnet.microsoft.com/download/dotnet/6.0)
+- [.NET SDK 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Docker](https://www.docker.com/resources/what-container)
 
 ## Tags & Technologies
-- [.NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0)
-- [Docker](https://www.docker.com/resources/what-container)  
-- [ASP.NET Core 6.0](https://docs.microsoft.com/en-us/aspnet/core/release-notes/aspnetcore-6.0?view=aspnetcore-6.0)
-- [Ocelot](https://github.com/ThreeMammals/Ocelot)  
+- [.NET 8](https://github.com/dotnet/core/blob/main/release-notes/8.0)
 - [Consul](https://www.consul.io/)
+- [Docker](https://www.docker.com/resources/what-container)  
+- [Ocelot](https://github.com/ThreeMammals/Ocelot)  
+- [Ocelot Consul Service Builder](https://ocelot.readthedocs.io/en/latest/features/servicediscovery.html#consul-service-builder)
 
 ## Licence
 Licenced under [MIT](http://opensource.org/licenses/mit-license.php).

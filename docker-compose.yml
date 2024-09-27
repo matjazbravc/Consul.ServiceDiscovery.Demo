@@ -1,17 +1,15 @@
-version: '3.9'
-
 services:
    consul:
-        image: consul:latest
+        image: hashicorp/consul
+        container_name: consul
         command: consul agent -dev -log-level=warn -ui -client=0.0.0.0
         hostname: consul
-        container_name: consul
         networks:
             - common_network
 
    valueservice1.openapi:
-        container_name: valueservice1.openapi
         image: valueservice.openapi:latest
+        container_name: valueservice1.openapi
         restart: on-failure
         hostname: valueservice1.openapi
         build:
@@ -21,8 +19,8 @@ services:
             - common_network
 
    valueservice2.openapi:
-        container_name: valueservice2.openapi
         image: valueservice.openapi:latest
+        container_name: valueservice2.openapi
         restart: on-failure
         hostname: valueservice2.openapi
         build:
@@ -32,8 +30,8 @@ services:
             - common_network
 
    valueservice3.openapi:
-        container_name: valueservice3.openapi
         image: valueservice.openapi:latest
+        container_name: valueservice3.openapi
         restart: on-failure
         hostname: valueservice3.openapi
         build:
@@ -43,8 +41,8 @@ services:
             - common_network
 
    services.gateway:
-        container_name: services.gateway
         image: services.gateway:latest
+        container_name: services.gateway
         restart: on-failure
         hostname: services.gateway
         build:
