@@ -6,20 +6,14 @@ using System;
 
 namespace Services.Core.ServiceDiscovery
 {
-	public class ServiceDiscoveryHostedService : IHostedService
+	public class ServiceDiscoveryHostedService(IConsulClient client, ServiceConfig config) : IHostedService
 	{
-		private readonly IConsulClient _client;
-		private readonly ServiceConfig _config;
+		private readonly IConsulClient _client = client;
+		private readonly ServiceConfig _config = config;
 		private AgentServiceRegistration _registration;
 
-		public ServiceDiscoveryHostedService(IConsulClient client, ServiceConfig config)
-		{
-			_client = client;
-			_config = config;
-		}
-
-		// Registers service to Consul registry
-		public async Task StartAsync(CancellationToken cancellationToken)
+    // Registers service to Consul registry
+    public async Task StartAsync(CancellationToken cancellationToken)
 		{
 			_registration = new AgentServiceRegistration
 			{

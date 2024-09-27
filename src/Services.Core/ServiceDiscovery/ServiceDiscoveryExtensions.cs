@@ -9,12 +9,9 @@ namespace Services.Core.ServiceDiscovery
 	{
 		public static void AddConsul(this IServiceCollection services, ServiceConfig serviceConfig)
 		{
-			if (serviceConfig == null)
-			{
-				throw new ArgumentNullException(nameof(serviceConfig));
-			}
+      ArgumentNullException.ThrowIfNull(serviceConfig);
 
-			var consulClient = new ConsulClient(config =>
+      var consulClient = new ConsulClient(config =>
 			{
 				config.Address = serviceConfig.DiscoveryAddress;
 			});
