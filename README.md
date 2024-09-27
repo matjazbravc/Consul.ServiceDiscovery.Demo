@@ -201,40 +201,33 @@ Here are some necessary explanations for **ServiceDiscoveryProvider** settings i
   * PollConsul, means that Ocelot will poll Consul for latest service information
 * PollingInterval - tells Ocelot how often to call Consul for changes in the service registry
 
-After we have defined our configuration we can start to implement API Gateway based on **.NET 5** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
+After we have defined our configuration we can start to implement API Gateway based on **.NET 8** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
 
 ```csharp
-public class Program
-{
-	public static void Main(string[] args)
-	{
-		CreateHostBuilder(args).Build().Run();
-	}
+IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
+    .UseContentRoot(Directory.GetCurrentDirectory())
+    .ConfigureWebHostDefaults(webBuilder =>
+    {
+      webBuilder.UseStartup<Startup>();
+    })
+    .ConfigureAppConfiguration((hostingContext, config) =>
+    {
+      config
+        .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
+        .AddJsonFile("appsettings.json", false, true)
+        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true)
+        .AddEnvironmentVariables();
+    })
+    .ConfigureLogging((builderContext, logging) =>
+    {
+      logging.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
+      logging.AddConsole();
+      logging.AddDebug();
+      logging.AddEventSourceLogger();
+    });
 
-	public static IHostBuilder CreateHostBuilder(string[] args) =>
-		Host.CreateDefaultBuilder(args)
-			.UseContentRoot(Directory.GetCurrentDirectory())
-			.ConfigureWebHostDefaults(webBuilder =>
-			{
-				webBuilder.UseStartup<Startup>();
-			})
-			.ConfigureAppConfiguration((hostingContext, config) =>
-			{
-				config
-					.SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
-					.AddJsonFile("appsettings.json", false, true)
-					.AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
-					.AddJsonFile("ocelot.json", false, false)
-					.AddEnvironmentVariables();
-			})
-			.ConfigureLogging((builderContext, logging) =>
-			{
-				logging.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
-				logging.AddConsole();
-				logging.AddDebug();
-				logging.AddEventSourceLogger();
-			});
-}
+IHost host = hostBuilder.Build();
+await host.RunAsync();
 ```
 ```csharp
 public class Startup
@@ -287,11 +280,9 @@ As mention before, we will containerize all services with Docker, including **Co
 
 **docker-compose.yml** file with setup for all the containers looks like this:
 ```yaml
-version: '3.9'
-
 services:
    consul:
-        image: consul:latest
+        image: hashicorp/consul
         command: consul agent -dev -log-level=warn -ui -client=0.0.0.0
         hostname: consul
         container_name: consul
@@ -348,8 +339,6 @@ networks:
 ```
 Note that our services doesn’t contain any confuguration files, for that purpose we are going to use **Docker-compose.override.yml** file:
 ```yaml
-version: '3.9'
-
 services:
     consul:
         ports:
@@ -362,10 +351,10 @@ services:
           - ServiceConfig__Name=ValueService
           - ServiceConfig__DiscoveryAddress=http://consul:8500
           - ServiceConfig__Address=valueservice1.openapi
-          - ServiceConfig__Port=80
+          - ServiceConfig__Port=8080
           - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
-            - 9100:80
+            - 9100:8080
         depends_on:
             - consul
 
@@ -376,10 +365,10 @@ services:
           - ServiceConfig__Name=ValueService
           - ServiceConfig__DiscoveryAddress=http://consul:8500
           - ServiceConfig__Address=valueservice2.openapi
-          - ServiceConfig__Port=80
+          - ServiceConfig__Port=8080
           - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
-            - 9200:80
+            - 9200:8080
         depends_on:
             - consul
 
@@ -390,19 +379,18 @@ services:
           - ServiceConfig__Name=ValueService
           - ServiceConfig__DiscoveryAddress=http://consul:8500
           - ServiceConfig__Address=valueservice3.openapi
-          - ServiceConfig__Port=80
+          - ServiceConfig__Port=8080
           - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
-            - 9300:80
+            - 9300:8080
         depends_on:
             - consul
 
     services.gateway:
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-            - ASPNETCORE_URLS=http://+:80
         ports:
-            - 9500:80
+            - 9500:8080
         depends_on:
             - consul
             - valueservice1.openapi
