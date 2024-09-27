@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
     consul:
         ports:
@@ -12,10 +10,10 @@ services:
           - ServiceConfig__Name=ValueService
           - ServiceConfig__DiscoveryAddress=http://consul:8500
           - ServiceConfig__Address=valueservice1.openapi
-          - ServiceConfig__Port=80
+          - ServiceConfig__Port=8080
           - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
-            - 9100:80
+            - 9100:8080
         depends_on:
             - consul
 
@@ -26,10 +24,10 @@ services:
           - ServiceConfig__Name=ValueService
           - ServiceConfig__DiscoveryAddress=http://consul:8500
           - ServiceConfig__Address=valueservice2.openapi
-          - ServiceConfig__Port=80
+          - ServiceConfig__Port=8080
           - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
-            - 9200:80
+            - 9200:8080
         depends_on:
             - consul
 
@@ -40,19 +38,18 @@ services:
           - ServiceConfig__Name=ValueService
           - ServiceConfig__DiscoveryAddress=http://consul:8500
           - ServiceConfig__Address=valueservice3.openapi
-          - ServiceConfig__Port=80
+          - ServiceConfig__Port=8080
           - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
-            - 9300:80
+            - 9300:8080
         depends_on:
             - consul
 
     services.gateway:
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
-            - ASPNETCORE_URLS=http://+:80
         ports:
-            - 9500:80
+            - 9500:8080
         depends_on:
             - consul
             - valueservice1.openapi
