@@ -8,18 +8,11 @@ using Services.Core.ServiceDiscovery;
 
 namespace ValueService.OpenApi
 {
-	public class Startup
-	{
-		private const string SERVICE_NAME = "ValueService.OpenApi";
+	public class Startup(IConfiguration configuration)
+  {
+    public IConfiguration Configuration { get; } = configuration;
 
-		public Startup(IConfiguration configuration)
-		{
-			Configuration = configuration;
-		}
-
-		public IConfiguration Configuration { get; }
-
-		public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddConsul(Configuration.GetServiceConfig());
 			services.AddHttpContextAccessor();
@@ -46,7 +39,7 @@ namespace ValueService.OpenApi
 				endpoints.MapControllers();
 				endpoints.MapGet("", async context =>
 				{
-					await context.Response.WriteAsync(SERVICE_NAME);
+					await context.Response.WriteAsync("ValueService.OpenApi");
 				});
 			});
 		}

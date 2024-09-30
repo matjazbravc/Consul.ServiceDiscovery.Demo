@@ -7,18 +7,15 @@ namespace Services.Core.ServiceDiscovery
 	{
 		public static ServiceConfig GetServiceConfig(this IConfiguration configuration)
 		{
-			if (configuration == null)
-			{
-				throw new ArgumentNullException(nameof(configuration));
-			}
+      ArgumentNullException.ThrowIfNull(configuration);
 
-			var serviceConfig = new ServiceConfig
+      var serviceConfig = new ServiceConfig
 			{
 				Id = configuration.GetValue<string>("ServiceConfig:Id"),
 				Name = configuration.GetValue<string>("ServiceConfig:Name"),
-				Address = configuration.GetValue<string>("ServiceConfig:Address"),
+				ApiUrl = configuration.GetValue<string>("ServiceConfig:ApiUrl"),
 				Port = configuration.GetValue<int>("ServiceConfig:Port"),
-				DiscoveryAddress = configuration.GetValue<Uri>("ServiceConfig:DiscoveryAddress"),
+				ConsulUrl = configuration.GetValue<Uri>("ServiceConfig:ConsulUrl"),
 				HealthCheckEndPoint = configuration.GetValue<string>("ServiceConfig:HealthCheckEndPoint"),
 			};
 

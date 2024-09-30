@@ -13,7 +13,7 @@ namespace Services.Core.ServiceDiscovery
 
       var consulClient = new ConsulClient(config =>
 			{
-				config.Address = serviceConfig.DiscoveryAddress;
+				config.Address = serviceConfig.ConsulUrl;
 			});
 
 			services.AddSingleton(serviceConfig);

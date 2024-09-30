@@ -6,12 +6,12 @@ services:
     valueservice1.openapi:
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice1.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9100
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice1.openapi
           - ServiceConfig__Port=8080
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
             - 9100:8080
         depends_on:
@@ -20,12 +20,12 @@ services:
     valueservice2.openapi:
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice2.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9200
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice2.openapi
           - ServiceConfig__Port=8080
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
             - 9200:8080
         depends_on:
@@ -34,12 +34,12 @@ services:
     valueservice3.openapi:
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
+          - ServiceConfig__ApiUrl=valueservice3.openapi
+          - ServiceConfig__ConsulUrl=http://consul:8500
+          - ServiceConfig__HealthCheckEndPoint=healthcheck
           - ServiceConfig__Id=ValueService.OpenApi-9300
           - ServiceConfig__Name=ValueService
-          - ServiceConfig__DiscoveryAddress=http://consul:8500
-          - ServiceConfig__Address=valueservice3.openapi
           - ServiceConfig__Port=8080
-          - ServiceConfig__HealthCheckEndPoint=healthcheck
         ports:
             - 9300:8080
         depends_on:

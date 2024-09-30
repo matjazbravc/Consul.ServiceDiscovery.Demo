@@ -8,11 +8,11 @@ namespace Services.Core.ServiceDiscovery
 
 		public string Name { get; set; }
 
-		public string Address { get; set; }
+		public string ApiUrl { get; set; }
 
 		public int Port { get; set; }
 
-		public Uri DiscoveryAddress { get; set; }
+		public Uri ConsulUrl { get; set; }
 
 		public string HealthCheckEndPoint { get; set; }
 	}

@@ -21,10 +21,9 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
     })
     .ConfigureLogging((builderContext, logging) =>
     {
-      logging.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
+      logging.ClearProviders();
       logging.AddConsole();
       logging.AddDebug();
-      logging.AddEventSourceLogger();
     });
 
 IHost host = hostBuilder.Build();
