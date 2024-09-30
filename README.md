@@ -182,7 +182,8 @@ It is important to set the Consul as a service discovery service in **GlobalConf
       "PollingInterval": 100
     }
   }
-}```
+}
+```
 Here are some necessary explanations for **ServiceDiscoveryProvider** settings in the **GlobalConfiguration** section: 
  
 * Host - the host of Consul
