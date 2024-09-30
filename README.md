@@ -156,9 +156,9 @@ It is important to set the Consul as a service discovery service in **GlobalConf
   "Routes": [
     {
       "Servicename": "ValueService",
-      "DownstreamPathTemplate": "/{url}",
+      "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
-      "UpstreamPathTemplate": "/{url}",
+      "UpstreamPathTemplate": "/{everything}",
       "UpstreamHttpMethod": [ "GET" ],
       "UseServiceDiscovery": true,
       "RouteIsCaseSensitive": false,
