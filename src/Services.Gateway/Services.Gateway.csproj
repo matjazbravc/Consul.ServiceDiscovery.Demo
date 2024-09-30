@@ -5,14 +5,12 @@
     <DockerfileContext>..\..</DockerfileContext>
     <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Ocelot" Version="22.0.0" />
     <PackageReference Include="Ocelot.Cache.CacheManager" Version="22.0.0" />
     <PackageReference Include="Ocelot.Provider.Consul" Version="22.0.0" />
     <PackageReference Include="Ocelot.Provider.Polly" Version="22.0.0" />
   </ItemGroup>
-
 	<ItemGroup>
 		<Content Update="ocelot.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -4,6 +4,8 @@ services:
              - "8500:8500"
 
     valueservice1.openapi:
+        # Swagger UI: http://localhost:9100/index.html
+        # http://localhost:9100/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
           - ServiceConfig__ApiUrl=valueservice1.openapi
@@ -18,6 +20,8 @@ services:
             - consul
 
     valueservice2.openapi:
+        # Swagger UI: http://localhost:9200/index.html
+        # http://localhost:9200/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
           - ServiceConfig__ApiUrl=valueservice2.openapi
@@ -32,6 +36,8 @@ services:
             - consul
 
     valueservice3.openapi:
+        # Swagger UI: http://localhost:9300/index.html
+        # http://localhost:9300/api/values
         environment:
           - ASPNETCORE_ENVIRONMENT=Development
           - ServiceConfig__ApiUrl=valueservice3.openapi
@@ -46,6 +52,7 @@ services:
             - consul
 
     services.gateway:
+        # Call first available service: http://localhost:9500/api/values
         environment:
             - ASPNETCORE_ENVIRONMENT=Development
         ports:

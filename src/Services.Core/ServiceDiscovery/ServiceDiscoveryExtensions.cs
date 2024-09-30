@@ -17,7 +17,7 @@ namespace Services.Core.ServiceDiscovery
 			});
 
 			services.AddSingleton(serviceConfig);
-			services.AddSingleton<IConsulClient, ConsulClient>(_ => consulClient);
+			services.AddSingleton<IConsulClient, ConsulClient>(provider => consulClient);
 			services.AddSingleton<IHostedService, ServiceDiscoveryHostedService>();
 		}
 	}
