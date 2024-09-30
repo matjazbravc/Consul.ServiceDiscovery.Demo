@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +7,7 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Ocelot.Provider.Consul;
 using Ocelot.Provider.Polly;
+using Services.Gateway.Services;
 using System.IO;
 
 IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
@@ -16,7 +16,7 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
   {
     webBuilder.ConfigureServices(services =>
       services.AddOcelot()
-        .AddConsul()
+        .AddConsul<MyConsulServiceBuilder>()
         .AddCacheManager(x =>
         {
           x.WithDictionaryHandle();
@@ -35,10 +35,9 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
     })
     .ConfigureLogging((builderContext, logging) =>
     {
-      logging.AddConfiguration(builderContext.Configuration.GetSection("Logging"));
+      logging.ClearProviders();
       logging.AddConsole();
       logging.AddDebug();
-      logging.AddEventSourceLogger();
     });
   });
 

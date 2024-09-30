@@ -173,7 +173,7 @@ It is important to set the Consul as a service discovery service in **GlobalConf
     }
   ],
   "GlobalConfiguration": {
-    "RequestIdKey": "OcRequestId",
+    "RequestIdKey": "OcelotRequestId",
     "UseServiceDiscovery": true,
     "ServiceDiscoveryProvider": {
       "Host": "consul",
@@ -470,9 +470,10 @@ Enjoy!
 
 ## Tags & Technologies
 - [.NET 8](https://github.com/dotnet/core/blob/main/release-notes/8.0)
+- [Consul](https://www.consul.io/)
 - [Docker](https://www.docker.com/resources/what-container)  
 - [Ocelot](https://github.com/ThreeMammals/Ocelot)  
-- [Consul](https://www.consul.io/)
+- [Ocelot Consul Service Builder](https://ocelot.readthedocs.io/en/latest/features/servicediscovery.html#consul-service-builder)
 
 ## Licence
 Licenced under [MIT](http://opensource.org/licenses/mit-license.php).

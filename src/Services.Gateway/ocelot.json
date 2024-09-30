@@ -2,9 +2,9 @@
   "Routes": [
     {
       "Servicename": "ValueService",
-      "DownstreamPathTemplate": "/{url}",
+      "DownstreamPathTemplate": "/{everything}",
       "DownstreamScheme": "http",
-      "UpstreamPathTemplate": "/{url}",
+      "UpstreamPathTemplate": "/{everything}",
       "UpstreamHttpMethod": [ "GET" ],
       "UseServiceDiscovery": true,
       "RouteIsCaseSensitive": false,
@@ -19,7 +19,7 @@
     }
   ],
   "GlobalConfiguration": {
-    "RequestIdKey": "OcRequestId",
+    "RequestIdKey": "OcelotRequestId",
     "UseServiceDiscovery": true,
     "ServiceDiscoveryProvider": {
       "Host": "consul",

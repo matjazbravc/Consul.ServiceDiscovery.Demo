@@ -6,10 +6,10 @@
     <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Ocelot" Version="23.2.2" />
-    <PackageReference Include="Ocelot.Cache.CacheManager" Version="23.2.2" />
-    <PackageReference Include="Ocelot.Provider.Consul" Version="23.2.2" />
-    <PackageReference Include="Ocelot.Provider.Polly" Version="23.2.2" />
+    <PackageReference Include="Ocelot" Version="23.3.3" />
+    <PackageReference Include="Ocelot.Cache.CacheManager" Version="23.3.3" />
+    <PackageReference Include="Ocelot.Provider.Consul" Version="23.3.3" />
+    <PackageReference Include="Ocelot.Provider.Polly" Version="23.3.3" />
   </ItemGroup>
 	<ItemGroup>
 		<Content Update="ocelot.json">
