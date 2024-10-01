@@ -66,7 +66,7 @@ public static class ServiceConfigExtensions
   {
     ArgumentNullException.ThrowIfNull(configuration);
 
-    var serviceConfig = new ServiceConfig
+    ServiceConfig serviceConfig = new()
     {
       Id = configuration.GetValue<string>("ServiceConfig:Id"),
       Name = configuration.GetValue<string>("ServiceConfig:Name"),
@@ -83,63 +83,57 @@ public static class ServiceConfigExtensions
 After reading the configuration required to reach service discovery service, we can use it to register our service. The code below is implemented as a **background task** (hosted service), that **registers** the service in **Consul** by overriding previous information about service if such existed. If the service is shutting down, it is **automatically unregistered** from the Consul registry.
 
 ```csharp
-public class ServiceDiscoveryHostedService : IHostedService
+public class ServiceDiscoveryHostedService(
+  ILogger<ServiceDiscoveryHostedService> logger,
+  IConsulClient client,
+  ServiceConfig config)
+  : IHostedService
 {
-  private readonly IConsulClient _client;
-  private readonly ServiceConfig _config;
-  private AgentServiceRegistration _registration;
-  private readonly ILogger _logger;
+  private AgentServiceRegistration _serviceRegistration;
 
-  public ServiceDiscoveryHostedService(IConsulClient client, ServiceConfig config)
-  {
-    _client = client;
-    _config = config;
-
-    using ILoggerFactory loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
-      .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace));
-
-    _logger = loggerFactory.CreateLogger<ServiceDiscoveryHostedService>();
-  }
-
-  // Registers service to Consul registry
+  /// <summary>
+  /// Registers service to Consul registry
+  /// </summary>
   public async Task StartAsync(CancellationToken cancellationToken)
   {
-    _registration = new AgentServiceRegistration
+    _serviceRegistration = new AgentServiceRegistration
     {
-      ID = _config.Id,
-      Name = _config.Name,
-      Address = _config.ApiUrl,
-      Port = _config.Port,
+      ID = config.Id,
+      Name = config.Name,
+      Address = config.ApiUrl,
+      Port = config.Port,
       Check = new AgentServiceCheck()
       {
         DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(5),
         Interval = TimeSpan.FromSeconds(15),
-        HTTP = $"http://{_config.ApiUrl}:{_config.Port}/api/values/{_config.HealthCheckEndPoint}",
+        HTTP = $"http://{config.ApiUrl}:{config.Port}/api/values/{config.HealthCheckEndPoint}",
         Timeout = TimeSpan.FromSeconds(5)
       }
     };
 
     try
     {
-      await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
-      await _client.Agent.ServiceRegister(_registration, cancellationToken).ConfigureAwait(false);
+      await client.Agent.ServiceDeregister(_serviceRegistration.ID, cancellationToken).ConfigureAwait(false);
+      await client.Agent.ServiceRegister(_serviceRegistration, cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Error while trying to deregister in StartAsync()");
+      logger.LogError(ex, $"Error while trying to deregister in {nameof(StartAsync)}");
     }
   }
 
-  // If the service is shutting down it deregisters service from Consul registry
+  /// <summary>
+  /// If the service is shutting down it deregisters service from Consul registry
+  /// </summary>
   public async Task StopAsync(CancellationToken cancellationToken)
   {
     try
     {
-      await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
+      await client.Agent.ServiceDeregister(_serviceRegistration.ID, cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Error while trying to deregister in StopAsync()");
+      logger.LogError(ex, $"Error while trying to deregister in {nameof(StopAsync)}");
     }
   }
 }
@@ -193,28 +187,31 @@ Here are some necessary explanations for **ServiceDiscoveryProvider** settings i
   * PollConsul, means that Ocelot will poll Consul for latest service information
 * PollingInterval - tells Ocelot how often to call Consul for changes in the service registry
 
-After we have defined our configuration we can start to implement API Gateway based on **.NET 8** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
+After we have defined our configuration we can start to implement API Gateway. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
 
 ```csharp
-using System.IO;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using ValueService.OpenApi;
-
 IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
-    .UseContentRoot(Directory.GetCurrentDirectory())
-    .ConfigureWebHostDefaults(webBuilder =>
-    {
-      webBuilder.UseStartup<Startup>();
-    })
+  .UseContentRoot(Directory.GetCurrentDirectory())
+  .ConfigureWebHostDefaults(webBuilder =>
+  {
+    webBuilder.ConfigureServices(services =>
+      services
+        .AddOcelot()
+        .AddConsul<MyConsulServiceBuilder>()
+        .AddCacheManager(x =>
+        {
+          x.WithDictionaryHandle();
+        })
+        .AddPolly());
+    webBuilder.Configure(app =>
+      app.UseOcelot().Wait())
     .ConfigureAppConfiguration((hostingContext, config) =>
     {
       config
         .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
         .AddJsonFile("appsettings.json", false, true)
-        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true)
+        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
+        .AddJsonFile("ocelot.json", false, true)
         .AddEnvironmentVariables();
     })
     .ConfigureLogging((builderContext, logging) =>
@@ -223,78 +220,10 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
       logging.AddConsole();
       logging.AddDebug();
     });
+  });
 
 IHost host = hostBuilder.Build();
 await host.RunAsync();
-```
-```csharp
-public class Startup(IConfiguration configuration)
-{
-  public IConfiguration Configuration { get; } = configuration;
-
-  public void ConfigureServices(IServiceCollection services)
-  {
-    services.AddConsul(Configuration.GetServiceConfig());
-    services.AddHttpContextAccessor();
-    services.AddControllers();
-    services.AddCors();
-    services.AddRouting(options => options.LowercaseUrls = true);
-    services.AddEndpointsApiExplorer();
-    services.AddSwaggerGen(options =>
-    {
-      options.SwaggerDoc("v1", new OpenApiInfo
-      {
-        Version = "v1",
-        Title = "ValueService.OpenAPI",
-        Description = "An ASP.NET Core Web API for demonstrating Consul service discovery.",
-        TermsOfService = new Uri("https://example.com/terms"),
-        Contact = new OpenApiContact
-        {
-          Name = "Example Contact",
-          Url = new Uri("https://example.com/contact")
-        },
-        License = new OpenApiLicense
-        {
-          Name = "Example License",
-          Url = new Uri("https://example.com/license")
-        }
-      });
-
-      var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-      options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-    });
-  }
-
-  public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-  {
-    app.UseRouting();
-    if (env.IsDevelopment())
-    {
-      app.UseSwagger();
-      app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
-      {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-      });
-    }
-    else
-    {
-      app.UseHsts();
-    }
-
-    // Configure the HTTP request pipeline.
-    app.UseRouting();
-    app.UseStaticFiles();
-    app.UseEndpoints(endpoints =>
-    {
-      endpoints.MapControllers();
-      endpoints.MapGet("", async context =>
-      {
-        await context.Response.WriteAsync("ValueService.OpenApi");
-      });
-    });
-  }
-}
 ```
 ## Running in Docker
 
@@ -430,13 +359,13 @@ services:
 ```
 ## Setup the Containers
 
-To execute compose file, open Powershell, and navigate to the compose file in the root folder. Then execute the following command: **docker-compose up -d --build** which starts and runs all services. The **-d** parameter executes the command detached. This means that the containers run in the background and don’t block your Powershell window. To check all running containers use command **docker ps**.
+To execute compose file, open Powershell, and navigate to the compose file in the root folder. Then execute the following command: **docker-compose up -d --build --remove-orphans** which starts and runs all services. The **-d** parameter executes the command detached. This means that the containers run in the background and don’t block your Powershell window. To check all running containers use command **docker ps**.
 
 ![](res/Docker.jpg)
 
 ## Consul Web UI
 
-The Consul offers a nice web user interface right out of the box. You can access it on port **8500** (**http://localhost:8500**). Let’s look at some of the screens.
+The Consul offers a nice web user interface right out of the box. You can access it on port **8500**: [http://localhost:8500](http://localhost:8500). Let’s look at some of the screens.
 
 The home page for the Consul UI services with all the relevant information related to a Consul agent and web service check.
 ![](res/consul1.jpg)
@@ -448,7 +377,7 @@ The home page for the Consul UI services with all the relevant information relat
 ![](res/consul4.jpg)
 
 ## Check it out
-Let’s make several calls through API Gateway http://localhost:9500/api/values. Load balancer will loop through available services and send requests and return responses:
+Let’s make several calls through API Gateway: [http://localhost:9500/api/values](http://localhost:9500/api/values). Load balancer will loop through available services and send requests and return responses:
 
 ![](res/Gateway1.jpg)
 

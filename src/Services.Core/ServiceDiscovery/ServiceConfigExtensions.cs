@@ -9,7 +9,7 @@ public static class ServiceConfigExtensions
   {
     ArgumentNullException.ThrowIfNull(configuration);
 
-    var serviceConfig = new ServiceConfig
+    ServiceConfig serviceConfig = new()
     {
       Id = configuration.GetValue<string>("ServiceConfig:Id"),
       Name = configuration.GetValue<string>("ServiceConfig:Name"),

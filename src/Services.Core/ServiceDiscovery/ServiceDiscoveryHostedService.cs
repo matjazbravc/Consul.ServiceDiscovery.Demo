@@ -7,63 +7,57 @@ using System;
 
 namespace Services.Core.ServiceDiscovery;
 
-public class ServiceDiscoveryHostedService : IHostedService
+public class ServiceDiscoveryHostedService(
+  ILogger<ServiceDiscoveryHostedService> logger,
+  IConsulClient client,
+  ServiceConfig config)
+  : IHostedService
 {
-  private readonly IConsulClient _client;
-  private readonly ServiceConfig _config;
-  private AgentServiceRegistration _registration;
-  private readonly ILogger _logger;
+  private AgentServiceRegistration _serviceRegistration;
 
-  public ServiceDiscoveryHostedService(IConsulClient client, ServiceConfig config)
-  {
-    _client = client;
-    _config = config;
-
-    using ILoggerFactory loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder
-      .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace));
-
-    _logger = loggerFactory.CreateLogger<ServiceDiscoveryHostedService>();
-  }
-
-  // Registers service to Consul registry
+  /// <summary>
+  /// Registers service to Consul registry
+  /// </summary>
   public async Task StartAsync(CancellationToken cancellationToken)
   {
-    _registration = new AgentServiceRegistration
+    _serviceRegistration = new AgentServiceRegistration
     {
-      ID = _config.Id,
-      Name = _config.Name,
-      Address = _config.ApiUrl,
-      Port = _config.Port,
+      ID = config.Id,
+      Name = config.Name,
+      Address = config.ApiUrl,
+      Port = config.Port,
       Check = new AgentServiceCheck()
       {
         DeregisterCriticalServiceAfter = TimeSpan.FromSeconds(5),
         Interval = TimeSpan.FromSeconds(15),
-        HTTP = $"http://{_config.ApiUrl}:{_config.Port}/api/values/{_config.HealthCheckEndPoint}",
+        HTTP = $"http://{config.ApiUrl}:{config.Port}/api/values/{config.HealthCheckEndPoint}",
         Timeout = TimeSpan.FromSeconds(5)
       }
     };
 
     try
     {
-      await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
-      await _client.Agent.ServiceRegister(_registration, cancellationToken).ConfigureAwait(false);
+      await client.Agent.ServiceDeregister(_serviceRegistration.ID, cancellationToken).ConfigureAwait(false);
+      await client.Agent.ServiceRegister(_serviceRegistration, cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Error while trying to deregister in StartAsync()");
+      logger.LogError(ex, $"Error while trying to deregister in {nameof(StartAsync)}");
     }
   }
 
-  // If the service is shutting down it deregisters service from Consul registry
+  /// <summary>
+  /// If the service is shutting down it deregisters service from Consul registry
+  /// </summary>
   public async Task StopAsync(CancellationToken cancellationToken)
   {
     try
     {
-      await _client.Agent.ServiceDeregister(_registration.ID, cancellationToken).ConfigureAwait(false);
+      await client.Agent.ServiceDeregister(_serviceRegistration.ID, cancellationToken).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
-      _logger.LogError(ex, "Error while trying to deregister in StopAsync()");
+      logger.LogError(ex, $"Error while trying to deregister in {nameof(StopAsync)}");
     }
   }
 }
