@@ -187,21 +187,31 @@ Here are some necessary explanations for **ServiceDiscoveryProvider** settings i
   * PollConsul, means that Ocelot will poll Consul for latest service information
 * PollingInterval - tells Ocelot how often to call Consul for changes in the service registry
 
-After we have defined our configuration we can start to implement API Gateway based on **.NET 8** and **Ocelot**. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
+After we have defined our configuration we can start to implement API Gateway. Below we can see the implementation of Ocelot API Gateway service, that uses our **ocelot.json** configuration file and **Consul** as a service registry.
 
 ```csharp
 IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
-    .UseContentRoot(Directory.GetCurrentDirectory())
-    .ConfigureWebHostDefaults(webBuilder =>
-    {
-      webBuilder.UseStartup<Startup>();
-    })
+  .UseContentRoot(Directory.GetCurrentDirectory())
+  .ConfigureWebHostDefaults(webBuilder =>
+  {
+    webBuilder.ConfigureServices(services =>
+      services
+        .AddOcelot()
+        .AddConsul<MyConsulServiceBuilder>()
+        .AddCacheManager(x =>
+        {
+          x.WithDictionaryHandle();
+        })
+        .AddPolly());
+    webBuilder.Configure(app =>
+      app.UseOcelot().Wait())
     .ConfigureAppConfiguration((hostingContext, config) =>
     {
       config
         .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
         .AddJsonFile("appsettings.json", false, true)
-        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true)
+        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
+        .AddJsonFile("ocelot.json", false, true)
         .AddEnvironmentVariables();
     })
     .ConfigureLogging((builderContext, logging) =>
@@ -210,73 +220,10 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
       logging.AddConsole();
       logging.AddDebug();
     });
+  });
 
 IHost host = hostBuilder.Build();
 await host.RunAsync();
-```
-```csharp
-public class Startup(IConfiguration configuration)
-{
-  public IConfiguration Configuration { get; } = configuration;
-
-  public void ConfigureServices(IServiceCollection services)
-  {
-    services.AddConsul(Configuration.GetServiceConfig());
-    services.AddHttpContextAccessor();
-    services.AddControllers();
-    services.AddCors();
-    services.AddRouting(options => options.LowercaseUrls = true);
-    services.AddEndpointsApiExplorer();
-    services.AddSwaggerGen(options =>
-    {
-      options.SwaggerDoc("v1", new OpenApiInfo
-      {
-        Version = "v1",
-        Title = "ValueService.OpenAPI",
-        Description = "An ASP.NET Core Web API for demonstrating Consul service discovery.",
-        TermsOfService = new Uri("https://example.com/terms"),
-        Contact = new OpenApiContact
-        {
-          Name = "Example Contact",
-          Url = new Uri("https://example.com/contact")
-        },
-        License = new OpenApiLicense
-        {
-          Name = "Example License",
-          Url = new Uri("https://example.com/license")
-        }
-      });
-
-      string xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-      options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-    });
-  }
-
-  public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-  {
-    if (env.IsDevelopment())
-    {
-      app.UseSwagger();
-      app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
-      {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
-      });
-    }
-
-    // Configure the HTTP request pipeline.
-    app.UseRouting();
-    app.UseStaticFiles();
-    app.UseEndpoints(endpoints =>
-    {
-      endpoints.MapControllers();
-      endpoints.MapGet("", async context =>
-      {
-        await context.Response.WriteAsync("ValueService.OpenApi");
-      });
-    });
-  }
-}
 ```
 ## Running in Docker
 
@@ -412,7 +359,7 @@ services:
 ```
 ## Setup the Containers
 
-To execute compose file, open Powershell, and navigate to the compose file in the root folder. Then execute the following command: **docker-compose up -d --build** which starts and runs all services. The **-d** parameter executes the command detached. This means that the containers run in the background and don’t block your Powershell window. To check all running containers use command **docker ps**.
+To execute compose file, open Powershell, and navigate to the compose file in the root folder. Then execute the following command: **docker-compose up -d --build --remove-orphans** which starts and runs all services. The **-d** parameter executes the command detached. This means that the containers run in the background and don’t block your Powershell window. To check all running containers use command **docker ps**.
 
 ![](res/Docker.jpg)
 

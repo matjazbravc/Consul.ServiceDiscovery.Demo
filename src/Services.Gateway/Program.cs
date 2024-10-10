@@ -15,7 +15,8 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
   .ConfigureWebHostDefaults(webBuilder =>
   {
     webBuilder.ConfigureServices(services =>
-      services.AddOcelot()
+      services
+        .AddOcelot()
         .AddConsul<MyConsulServiceBuilder>()
         .AddCacheManager(x =>
         {
@@ -30,7 +31,7 @@ IHostBuilder hostBuilder = Host.CreateDefaultBuilder(args)
         .SetBasePath(hostingContext.HostingEnvironment.ContentRootPath)
         .AddJsonFile("appsettings.json", false, true)
         .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
-        .AddJsonFile("ocelot.json", false, false)
+        .AddJsonFile("ocelot.json", false, true)
         .AddEnvironmentVariables();
     })
     .ConfigureLogging((builderContext, logging) =>
