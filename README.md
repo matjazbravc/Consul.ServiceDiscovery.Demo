@@ -436,7 +436,7 @@ To execute compose file, open Powershell, and navigate to the compose file in th
 
 ## Consul Web UI
 
-The Consul offers a nice web user interface right out of the box. You can access it on port **8500** (**http://localhost:8500**). Let’s look at some of the screens.
+The Consul offers a nice web user interface right out of the box. You can access it on port **8500**: [http://localhost:8500](http://localhost:8500). Let’s look at some of the screens.
 
 The home page for the Consul UI services with all the relevant information related to a Consul agent and web service check.
 ![](res/consul1.jpg)
@@ -448,7 +448,7 @@ The home page for the Consul UI services with all the relevant information relat
 ![](res/consul4.jpg)
 
 ## Check it out
-Let’s make several calls through API Gateway http://localhost:9500/api/values. Load balancer will loop through available services and send requests and return responses:
+Let’s make several calls through API Gateway: [http://localhost:9500/api/values](http://localhost:9500/api/values). Load balancer will loop through available services and send requests and return responses:
 
 ![](res/Gateway1.jpg)
 

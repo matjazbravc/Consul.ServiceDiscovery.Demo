@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 
 namespace ValueService.OpenApi.Controllers;
 
@@ -9,37 +10,35 @@ namespace ValueService.OpenApi.Controllers;
 [Route("api/[controller]")]
 public class ValuesController : ControllerBase
 {
-  private readonly HttpContext _context;
   private readonly ILogger<ValuesController> _logger;
   private readonly string _baseUrl;
+  private readonly HttpRequest _httpRequest;
 
   public ValuesController(ILogger<ValuesController> logger, IHttpContextAccessor context)
   {
     if (context.HttpContext != null)
     {
-      _context = context.HttpContext;
-      _baseUrl = $"{_context.Request.Scheme}://{_context.Request.Host}";
+      _httpRequest = context.HttpContext.Request;
+      _baseUrl = $"{_httpRequest.Scheme}://{_httpRequest.Host}";
     }
     _logger = logger;
   }
 
   [HttpGet("badcode")]
-  public string BadCode()
-  {
-    throw new Exception("Some bad code was executed!");
-  }
+  public string BadCode() => throw new ArgumentException("Some bad code was executed!");
 
   [HttpGet]
   [ProducesResponseType<string>(StatusCodes.Status200OK)]
   public IActionResult Get()
   {
-    var ocelotReqId = _context.Request.Headers["OcelotRequestId"];
+    IHeaderDictionary headers = _httpRequest.Headers;
+    StringValues ocelotReqId = headers["OcelotRequestId"];
     if (string.IsNullOrEmpty(ocelotReqId))
     {
       ocelotReqId = "N/A";
     }
-    var msg = $"Url: {_baseUrl}, Method: {_context.Request.Method}, Path: {_context.Request.Path}, OcelotRequestId: {ocelotReqId}";
-    _logger.LogInformation(msg);
+    string msg = $"Url: {_baseUrl}, Method: {_httpRequest.Method}, Path: {_httpRequest.Path}, OcelotRequestId: {ocelotReqId}";
+    _logger.LogInformation("{Message}", msg);
     return Ok(msg);
   }
 
@@ -47,8 +46,8 @@ public class ValuesController : ControllerBase
   [ProducesResponseType<string>(StatusCodes.Status200OK)]
   public IActionResult Healthcheck()
   {
-    var msg = $"{_context.Request.Host} is healthy";
-    _logger.LogInformation(msg);
+    string msg = $"{_httpRequest.Host} is healthy";
+    _logger.LogInformation("{Message}", msg);
     return Ok(msg);
   }
 
@@ -56,8 +55,8 @@ public class ValuesController : ControllerBase
   [ProducesResponseType<string>(StatusCodes.Status200OK)]
   public IActionResult Status()
   {
-    var msg = $"Running on {_context.Request.Host}";
-    _logger.LogInformation(msg);
+    string msg = $"Running on {_httpRequest.Host}";
+    _logger.LogInformation("{Message}", msg);
     return Ok(msg);
   }
 }

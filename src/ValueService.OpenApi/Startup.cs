@@ -44,12 +44,12 @@ public class Startup(IConfiguration configuration)
         }
       });
 
-      var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+      string xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
       options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
     });
   }
 
-  public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+  public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
   {
     if (env.IsDevelopment())
     {
