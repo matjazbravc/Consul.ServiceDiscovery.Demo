@@ -3,10 +3,8 @@
   <PropertyGroup Label="Globals">
     <ProjectVersion>2.1</ProjectVersion>
     <DockerTargetOS>Linux</DockerTargetOS>
-    <ProjectGuid>439e178d-b6f8-4cdb-81f2-6c66ff164c84</ProjectGuid>
-    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/weatherforecast</DockerServiceUrl>
-    <DockerServiceName>servicea.openapi</DockerServiceName>
+    <DockerPublishLocally>False</DockerPublishLocally>
+    <ProjectGuid>3b03183c-7852-459f-9b4f-bf411f1d8d45</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.override.yml">

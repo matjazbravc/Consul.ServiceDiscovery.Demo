@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "services.gateway": "StartDebugging",
+        "valueservice1.openapi": "StartDebugging",
+        "valueservice2.openapi": "StartDebugging",
+        "valueservice3.openapi": "StartDebugging"
+      }
+    }
+  }
+}
