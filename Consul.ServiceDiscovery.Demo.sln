@@ -29,6 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Copilot", "Copilot", "{02EA
 	ProjectSection(SolutionItems) = preProject
 		.github\instructions\clean-architecture.instructions.md = .github\instructions\clean-architecture.instructions.md
 		.github\instructions\coding-style-csharp.instructions.md = .github\instructions\coding-style-csharp.instructions.md
+		.github\copilot-instructions.md = .github\copilot-instructions.md
 		.github\instructions\unit-and-integration-tests.instructions.md = .github\instructions\unit-and-integration-tests.instructions.md
 	EndProjectSection
 EndProject
