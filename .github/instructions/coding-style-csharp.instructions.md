@@ -1,8 +1,8 @@
 ---
-Description: 
-"This file provides guidelines for writing clean, maintainable, and idiomatic C# code with
-a focus on functional patterns and proper abstraction."
+applyTo: '**/*.cs'
 ---
+
+# Coding Style
 
 ## References
 - [Microsoft C# Coding Conventions](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions)
@@ -10,7 +10,7 @@ a focus on functional patterns and proper abstraction."
 - [C# 12 Language Features](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-12)
  -[GitHub Custom instructions](https://docs.github.com/en/copilot/tutorials/customization-library/custom-instructions/your-first-custom-instructions)
 
-## General Code Style Guidelines
+## General Guidelines
 - Preferred language is C#
 - Use C# 12 syntax and .NET 8 features where appropriate.
 - Follow [Microsoft's C# coding conventions](https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions).
@@ -666,126 +666,59 @@ a focus on functional patterns and proper abstraction."
   }
   ```
 
-## Logging guidelines
-- All logging statements (except Error and Warning level) is wrapped in the appropriate IsEnabled check (depends on logging framework).
-- Don't break the logging into multiple lines.
-- Don't modify or break existing logging statements.
-- Don't apply any other code style changes.
-- Convert existing string interpolation in logging statements to use Format.
-  ```csharp
-  // Good example 1
-  private void TestMethod(int parama1, string param2)
-  {
-    if (_log.IsDebugEnabled)
-    {
-      _log.DebugFormat("Executing with {0}, {1}", parama1, param2);
-    }
-  }
+## Logging Guidelines
 
-  // Avoid example
-  private void TestMethod(int parama1, string param2)
-  {
-    _log.Debug($"Executing with {parama1}, {param2}");
-  }
-  ```
-
-  ```csharp
-  // Good example 2
-  private void TestMethod(int parama1, string param2)
-  {
-    if (_log.IsEnabled(LogLevel.Information))
-    {
-      _log.LogInformation("Executing with {0}, {1}", parama1, param2);
-    }  
-  }
-
-  // Avoid example
-  private void TestMethod(int parama1, string param2)
-  {
-    _log.LogInformation("Executing with {0}, {1}", parama1, param2);
-  }
-  ```
-
-### Debug logging
-- Add debug logging with 'Entering' and 'Exiting' messages to indicate method entry and exit points.
-- Don't add any comments before logging statements.
-- Don't add debug logging inside constructors.
-- Don't add debug logging inside loops or conditional statements.
-- Use `nameof()` as the first parameter in logging statements to indicate the method name, instead of hardcoded method names.
-- Debug logging statements should be added only at the start and end of methods.
-  ```csharp
-  // Debug logging convention example 1
-  public class OrderProcessor
-  {
+- **All logging statements (except Error and Warning level) must be wrapped in the appropriate `IsEnabled` check.**
+  - For `ILogger<T>`, use `if (_logger.IsEnabled(LogLevel.Information))` or `if (_logger.IsEnabled(LogLevel.Debug))`.
+  - For other frameworks, use the equivalent (e.g., `if (_log.IsInfoEnabled)`).
+- **Do not break logging statements into multiple lines.**
+- **Use format parameters, not string interpolation, in logging statements.**
+  - Good: `_logger.LogInformation("Order {OrderId} processed", order.Id);`
+  - Avoid: `_logger.LogInformation($"Order {order.Id} processed");`
+- **Preserve all existing logging statements, but ensure they implement the required `IsEnabled` check.**
+- **Debug logging:**
+  - Add debug logging with 'Entering' and 'Exiting' messages at the start and end of public methods.
+  - Do not add debug logging inside constructors, loops, or conditionals.
+  - Use `nameof()` for the method name in logging statements.
+  - Example:
+    ```csharp
     public void ProcessOrder(Order order)
     {
-      if (_log.IsDebugEnabled)
+      if (_logger.IsEnabled(LogLevel.Debug))
       {
-        _log.DebugFormat("Entering {0} with orderId={1}", nameof(ProcessOrder), order.Id);
+        _logger.LogDebug("Entering {Method} with orderId={OrderId}", nameof(ProcessOrder), order.Id);
       }
 
-      var result = new Result();
       // ... method logic ...
 
-      if (_log.IsDebugEnabled)
+      if (_logger.IsEnabled(LogLevel.Debug))
       {
-        _log.DebugFormat("Exiting {0} with result={1}", nameof(ProcessOrder), result);
+        _logger.LogDebug("Exiting {Method} with result={Result}", nameof(ProcessOrder), result);
       }
-
-      return result;
     }
-  }
-  ```
-
-  ```csharp
-  // Debug logging convention example 2 (ILogger<T> syntax)
-  public class OrderProcessor
-  {
-    public void ProcessOrder(Order order)
+    ```
+- **Info logging:**
+  - Wrap all info-level logs in `IsEnabled(LogLevel.Information)` checks.
+  - Example:
+    ```csharp
+    if (_logger.IsEnabled(LogLevel.Information))
     {
-      if (_log.IsEnabled(LogLevel.Debug))
-      {
-        _log.LogDebug("Entering {Method} with orderId={OrderId}", nameof(ProcessOrder), order.Id);
-      }
-
-      var result = new Result();
-      // ... method logic ...
-
-      if (_log.IsEnabled(LogLevel.Debug))
-      {
-        _log.LogDebug("Exiting {Method} with result={Result}", nameof(ProcessOrder), result);
-      }
-
-      return result;
+      _logger.LogInformation("Order details: {Order}", order);
     }
-  }
-  ```
+    ```
+- **Warning and Error logging:**
+  - No `IsEnabled` check is required for warning and error logs.
+  - Example:
+    ```csharp
+    _logger.LogWarning("Order {OrderId} not found", orderId);
+    _logger.LogError(exception, "Failed to process order {OrderId}", orderId);
+    ```
+- **Do not use string interpolation or concatenation in logging statements.**
+- **Do not add comments before logging statements.**
+- **Do not add debug logging inside constructors.**
+- **Do not add debug logging inside loops or conditional statements.**
+- **All debug logging statements should be at the start and end of methods only.**
+- **Always use `nameof()` for method names in logging.**
+- **Do not break existing logging statements into multiple lines.**
 
-### Info Logging
-  ```csharp
-  // Info logging convention example 1
-  public class OrderProcessor
-  {
-    public void ProcessOrder(Order order)
-    {
-      if (_log.IsInfoEnabled)
-      {
-        _log.InfoFormat("Order details: {0} ...", order, ...);
-      }
-    }
-  }
-  ```
-
-  ```csharp
-  // Info logging convention example 2 (ILogger<T> syntax)
-  public class OrderProcessor
-  {
-    public void ProcessOrder(Order order)
-    {
-       if (_logger.IsEnabled(LogLevel.Information))
-      {
-        _logger.LogInformation("Order details: {Order} ...", order);
-      }
-    }
-  }
-  ```
+---

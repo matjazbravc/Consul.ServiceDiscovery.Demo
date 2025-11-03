@@ -1,6 +1,7 @@
 ---
 applyTo: '**/*.cs'
 ---
+
 # Rules for Unit and Integration Tests
 
 This rule defines the best practices and tools to use for writing unit and integration tests in the backend project.
