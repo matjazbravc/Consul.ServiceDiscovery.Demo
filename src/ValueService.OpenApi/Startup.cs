@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Services.Core.ServiceDiscovery;
 using System;
 using System.IO;
@@ -67,10 +67,7 @@ public class Startup(IConfiguration configuration)
     app.UseEndpoints(endpoints =>
     {
       endpoints.MapControllers();
-      endpoints.MapGet("", async context =>
-      {
-        await context.Response.WriteAsync("ValueService.OpenApi");
-      });
+      endpoints.MapGet("", async context => await context.Response.WriteAsync("ValueService.OpenApi"));
     });
   }
 }

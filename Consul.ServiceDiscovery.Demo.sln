@@ -27,12 +27,20 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Copilot", "Copilot", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		.github\prompts\BeastMode31.prompt.md = .github\prompts\BeastMode31.prompt.md
-		.github\instructions\clean-architecture.instructions.md = .github\instructions\clean-architecture.instructions.md
-		.github\prompts\code-review.prompt.md = .github\prompts\code-review.prompt.md
-		.github\instructions\coding-style-csharp.instructions.md = .github\instructions\coding-style-csharp.instructions.md
 		.github\copilot-instructions.md = .github\copilot-instructions.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Instructions", "Instructions", "{D096BE4B-18AB-4C5B-9758-4BE319106E0E}"
+	ProjectSection(SolutionItems) = preProject
+		.github\instructions\clean-architecture.instructions.md = .github\instructions\clean-architecture.instructions.md
+		.github\instructions\coding-style-csharp.instructions.md = .github\instructions\coding-style-csharp.instructions.md
 		.github\instructions\unit-and-integration-tests.instructions.md = .github\instructions\unit-and-integration-tests.instructions.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Prompts", "Prompts", "{9823745D-FC60-4C70-9EB4-8749288BFFCD}"
+	ProjectSection(SolutionItems) = preProject
+		.github\prompts\BeastMode31.prompt.md = .github\prompts\BeastMode31.prompt.md
+		.github\prompts\code-review.prompt.md = .github\prompts\code-review.prompt.md
 	EndProjectSection
 EndProject
 Global
@@ -69,6 +77,8 @@ Global
 		{4BBD3C12-22BD-4F1A-90AB-CBD993084943} = {D6C7EB69-541C-46FC-96BE-3C049425ADF7}
 		{0AF3F3AA-5503-4350-8F59-96CE62C18EA9} = {4BBD3C12-22BD-4F1A-90AB-CBD993084943}
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {37DA5416-7DA1-44CA-B090-DCE7CF855E12}
+		{D096BE4B-18AB-4C5B-9758-4BE319106E0E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{9823745D-FC60-4C70-9EB4-8749288BFFCD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {99F1C28C-02CB-40AB-9915-903AD30385BF}
