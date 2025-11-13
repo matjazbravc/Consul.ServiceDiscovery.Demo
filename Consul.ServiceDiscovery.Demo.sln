@@ -27,7 +27,9 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Copilot", "Copilot", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
+		.github\prompts\BeastMode31.prompt.md = .github\prompts\BeastMode31.prompt.md
 		.github\instructions\clean-architecture.instructions.md = .github\instructions\clean-architecture.instructions.md
+		.github\prompts\code-review.prompt.md = .github\prompts\code-review.prompt.md
 		.github\instructions\coding-style-csharp.instructions.md = .github\instructions\coding-style-csharp.instructions.md
 		.github\copilot-instructions.md = .github\copilot-instructions.md
 		.github\instructions\unit-and-integration-tests.instructions.md = .github\instructions\unit-and-integration-tests.instructions.md
