@@ -402,6 +402,22 @@ Enjoy!
 - [Ocelot](https://github.com/ThreeMammals/Ocelot)  
 - [Ocelot Consul Service Builder](https://ocelot.readthedocs.io/en/latest/features/servicediscovery.html#consul-service-builder)
 
+## Useful VS Extensions
+- [Clean Bin and Obj](https://marketplace.visualstudio.com/items?itemName=dobrynin.cleanbinandobj)
+- [CodeMaid 2022](https://marketplace.visualstudio.com/items?itemName=SteveCadwallader.CodeMaidVS2022)
+- [Document Health](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.DocumentHealth)
+- [Editor Info](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.DocumentMargin)
+- [File Explorer](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.WorkflowBrowser)
+- [Font Sizer 2.0](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.FontSizer2)
+- [Image Optimizer](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ImageOptimizer64bit)
+- [Markdown Editor v2](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.MarkdownEditor2)
+- [Open in Notepad++](https://marketplace.visualstudio.com/items?itemName=coding-with-calvin.OpeninNotepad)
+- [Rainbow Braces](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.RainbowBraces)
+- [Reset Zoom](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ResetZoom)
+- [Shortcut Presenter](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ShortcutPresenter)
+- [SQL Formatter](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.SqlFormatter)
+
+YouTube: [Visual Studio Extensions That Make You Happier](https://www.youtube.com/watch?v=bHy8kkoGNHk&t=1105s)
 ## Licence
 Licenced under [MIT](http://opensource.org/licenses/mit-license.php).
 Contact me on [LinkedIn](https://si.linkedin.com/in/matjazbravc).
